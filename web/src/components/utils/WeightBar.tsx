@@ -14,24 +14,30 @@ const colorMixer = (rgbA: number[], rgbB: number[], amountToMix: number) => {
 };
 
 const COLORS = {
-  // Colors used - https://materialui.co/flatuicolors
-  primaryColor: [231, 76, 60], // Red (Pomegranate)
-  secondColor: [39, 174, 96], // Green (Nephritis)
-  accentColor: [211, 84, 0], // Orange (Oragne)
+  fillPrimary: [83, 182, 255],
+  fillSecondary: [47, 125, 255],
+  durabilityHigh: [98, 211, 142],
+  durabilityMid: [255, 178, 71],
+  durabilityLow: [255, 88, 88],
 };
 
 const WeightBar: React.FC<{ percent: number; durability?: boolean }> = ({ percent, durability }) => {
-  const color = useMemo(
-    () =>
-      durability
-        ? percent < 50
-          ? colorMixer(COLORS.accentColor, COLORS.primaryColor, percent / 100)
-          : colorMixer(COLORS.secondColor, COLORS.accentColor, percent / 100)
-        : percent > 50
-        ? colorMixer(COLORS.primaryColor, COLORS.accentColor, percent / 100)
-        : colorMixer(COLORS.accentColor, COLORS.secondColor, percent / 50),
-    [durability, percent]
-  );
+  const fillStyle = useMemo(() => {
+    if (durability) {
+      const ratio = Math.min(Math.max(percent, 0), 100) / 100;
+      const start = percent < 50 ? COLORS.durabilityMid : COLORS.durabilityHigh;
+      const end = percent < 50 ? COLORS.durabilityLow : COLORS.durabilityMid;
+      return { background: colorMixer(start, end, ratio) };
+    }
+
+    return {
+      background: `linear-gradient(90deg, ${colorMixer(COLORS.fillPrimary, COLORS.fillSecondary, 0.35)} 0%, ${colorMixer(
+        COLORS.fillPrimary,
+        COLORS.fillSecondary,
+        0.9
+      )} 100%)`,
+    };
+  }, [durability, percent]);
 
   return (
     <div className={durability ? 'durability-bar' : 'weight-bar'}>
@@ -39,8 +45,8 @@ const WeightBar: React.FC<{ percent: number; durability?: boolean }> = ({ percen
         style={{
           visibility: percent > 0 ? 'visible' : 'hidden',
           height: '100%',
-          width: `${percent}%`,
-          backgroundColor: color,
+          width: `${Math.min(Math.max(percent, 0), 100)}%`,
+          ...fillStyle,
           transition: `background ${0.3}s ease, width ${0.3}s ease`,
         }}
       ></div>
